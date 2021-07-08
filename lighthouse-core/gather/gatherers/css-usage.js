@@ -17,7 +17,10 @@ class CSSUsage extends FRGatherer {
     this._stylesheets = [];
     /** @param {LH.Crdp.CSS.StyleSheetAddedEvent} sheet */
     this._onStylesheetAdded = sheet => this._stylesheets.push(sheet);
-    /** @type {LH.Crdp.CSS.RuleUsage[]|undefined} */
+    /**
+     * Initialize as undefined se we can assert results are fetched.
+     * @type {LH.Crdp.CSS.RuleUsage[]|undefined}
+     */
     this._ruleUsage = undefined;
   }
 
@@ -29,7 +32,7 @@ class CSSUsage extends FRGatherer {
   /**
    * @param {LH.Gatherer.FRTransitionalContext} context
    */
-  async startCollection(context) {
+  async startCSSUsageTracking(context) {
     const session = context.driver.defaultSession;
     session.on('CSS.styleSheetAdded', this._onStylesheetAdded);
 
@@ -41,7 +44,7 @@ class CSSUsage extends FRGatherer {
   /**
    * @param {LH.Gatherer.FRTransitionalContext} context
    */
-  async stopCollection(context) {
+  async stopCSSUsageTracking(context) {
     const session = context.driver.defaultSession;
     const coverageResponse = await session.sendCommand('CSS.stopRuleUsageTracking');
     this._ruleUsage = coverageResponse.ruleUsage;
@@ -51,17 +54,17 @@ class CSSUsage extends FRGatherer {
   /**
    * @param {LH.Gatherer.FRTransitionalContext} context
    */
-  async startSensitiveInstrumentation(context) {
+  async startInstrumentation(context) {
     if (context.gatherMode !== 'timespan') return;
-    await this.startCollection(context);
+    await this.startCSSUsageTracking(context);
   }
 
   /**
    * @param {LH.Gatherer.FRTransitionalContext} context
    */
-  async stopSensitiveInstrumentation(context) {
+  async stopInstrumentation(context) {
     if (context.gatherMode !== 'timespan') return;
-    await this.stopCollection(context);
+    await this.stopCSSUsageTracking(context);
   }
 
   /**
@@ -72,14 +75,15 @@ class CSSUsage extends FRGatherer {
     const session = context.driver.defaultSession;
     const executionContext = context.driver.executionContext;
 
+    // TODO(FR-COMPAT): Do this only for snapshot once legacy runner is deprecated.
     if (context.gatherMode !== 'timespan') {
-      await this.startCollection(context);
+      await this.startCSSUsageTracking(context);
 
       // Force style to recompute.
       // Doesn't appear to be necessary in newer versions of Chrome.
       await executionContext.evaluateAsync('getComputedStyle(document.body)');
 
-      await this.stopCollection(context);
+      await this.stopCSSUsageTracking(context);
     }
 
     // Fetch style sheet content in parallel.
