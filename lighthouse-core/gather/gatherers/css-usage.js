@@ -18,7 +18,7 @@ class CSSUsage extends FRGatherer {
     /** @param {LH.Crdp.CSS.StyleSheetAddedEvent} sheet */
     this._onStylesheetAdded = sheet => this._stylesheets.push(sheet);
     /**
-     * Initialize as undefined se we can assert results are fetched.
+     * Initialize as undefined so we can assert results are fetched.
      * @type {LH.Crdp.CSS.RuleUsage[]|undefined}
      */
     this._ruleUsage = undefined;
@@ -44,19 +44,19 @@ class CSSUsage extends FRGatherer {
   /**
    * @param {LH.Gatherer.FRTransitionalContext} context
    */
-  async stopCSSUsageTracking(context) {
-    const session = context.driver.defaultSession;
-    const coverageResponse = await session.sendCommand('CSS.stopRuleUsageTracking');
-    this._ruleUsage = coverageResponse.ruleUsage;
-    session.off('CSS.styleSheetAdded', this._onStylesheetAdded);
+  async startInstrumentation(context) {
+    if (context.gatherMode !== 'timespan') return;
+    await this.startCSSUsageTracking(context);
   }
 
   /**
    * @param {LH.Gatherer.FRTransitionalContext} context
    */
-  async startInstrumentation(context) {
-    if (context.gatherMode !== 'timespan') return;
-    await this.startCSSUsageTracking(context);
+  async stopCSSUsageTracking(context) {
+    const session = context.driver.defaultSession;
+    const coverageResponse = await session.sendCommand('CSS.stopRuleUsageTracking');
+    this._ruleUsage = coverageResponse.ruleUsage;
+    session.off('CSS.styleSheetAdded', this._onStylesheetAdded);
   }
 
   /**
