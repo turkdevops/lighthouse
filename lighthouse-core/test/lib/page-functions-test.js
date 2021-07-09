@@ -5,10 +5,14 @@
  */
 'use strict';
 
-const assert = require('assert').strict;
-const jsdom = require('jsdom');
-const pageFunctions = require('../../lib/page-functions.js');
+// TODO(esmodules): remove when this file is esm.
 
+/** @type {import('assert').strict} */
+let assert;
+/** @type {import('jsdom').strict} */
+let jsdom;
+/** @type {import('../../lib/page-functions.js')} */
+let pageFunctions;
 /** @type {import('../../../report/renderer/dom.js').DOM} */
 let DOM;
 
@@ -19,8 +23,11 @@ describe('Page Functions', () => {
   let dom;
 
   beforeAll(async () => {
-    // TODO(esmodules): remove when this file is esm.
+    assert = (await import('assert')).strict;
+    jsdom = await import('jsdom');
+    pageFunctions = (await import('../../lib/page-functions.js')).default;
     DOM = (await import('../../../report/renderer/dom.js')).DOM;
+
     const {document, ShadowRoot, Node, HTMLElement} = new jsdom.JSDOM('', {url}).window;
     global.ShadowRoot = ShadowRoot;
     global.Node = Node;
