@@ -5,7 +5,9 @@
  */
 'use strict';
 
-// TODO(esmodules): remove when this file is esm.
+// TODO(esmodules): Node 14, 16 crash with `--experimental-vm-modules` if require and import
+// are used in the same test file.
+// See https://github.com/GoogleChrome/lighthouse/pull/12702#issuecomment-876832620
 
 /** @type {import('assert').strict} */
 let assert;
