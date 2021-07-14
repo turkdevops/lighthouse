@@ -63,3 +63,5 @@ function __initLighthouseReport__() {
     }
   });
 }
+
+window.__initLighthouseReport__ = __initLighthouseReport__;
