@@ -4,6 +4,9 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
+import {IcuMessage} from './i18n';
+import Treemap from './treemap';
+
 type Details =
   Details.CriticalRequestChain |
   Details.DebugData |
@@ -79,8 +82,24 @@ declare module Details {
    * and the locations of interesting nodes.
    * Used by element screenshots renderer.
    */
-  interface FullPageScreenshot extends LH.Artifacts.FullPageScreenshot {
+  interface FullPageScreenshot {
     type: 'full-page-screenshot';
+    screenshot: {
+      /** Base64 image data URL. */
+      data: string;
+      width: number;
+      height: number;
+    };
+    nodes: Record<string, Rect>;
+  }
+
+  interface Rect {
+    width: number;
+    height: number;
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
   }
 
   interface Table {
@@ -111,14 +130,14 @@ declare module Details {
 
   interface TreemapData {
     type: 'treemap-data';
-    nodes: LH.Treemap.Node[];
+    nodes: Treemap.Node[];
   }
 
   /** String enum of possible types of values found within table items. */
   type ItemValueType = 'bytes' | 'code' | 'link' | 'ms' | 'multi' | 'node' | 'source-location' | 'numeric' | 'text' | 'thumbnail' | 'timespanMs' | 'url';
 
   /** Possible types of values found within table items. */
-  type ItemValue = string | number | boolean | DebugData | NodeValue | SourceLocationValue | LinkValue | UrlValue | CodeValue | NumericValue | LH.IcuMessage | TableSubItems;
+  type ItemValue = string | number | boolean | DebugData | NodeValue | SourceLocationValue | LinkValue | UrlValue | CodeValue | NumericValue | IcuMessage | TableSubItems;
 
   // TODO: drop TableColumnHeading, rename OpportunityColumnHeading to TableColumnHeading and
   // use that for all table-like audit details.
@@ -132,7 +151,7 @@ declare module Details {
      */
     key: string|null;
     /** Readable text label of the field. */
-    text: LH.IcuMessage | string;
+    text: IcuMessage | string;
     /**
      * The data format of the column of values being described. Usually
      * those values will be primitives rendered as this type, but the values
@@ -164,7 +183,7 @@ declare module Details {
       */
     key: string|null;
     /** Readable text label of the field. */
-    label: LH.IcuMessage | string;
+    label: IcuMessage | string;
     /**
      * The data format of the column of values being described. Usually
      * those values will be primitives rendered as this type, but the values
@@ -198,7 +217,7 @@ declare module Details {
    */
   interface CodeValue {
     type: 'code';
-    value: LH.IcuMessage | string;
+    value: IcuMessage | string;
   }
 
   /**
@@ -222,7 +241,7 @@ declare module Details {
     lhId?: string;
     path?: string;
     selector?: string;
-    boundingRect?: LH.Artifacts.Rect;
+    boundingRect?: Rect;
     /** An HTML snippet used to identify the node. */
     snippet?: string;
     /** A human-friendly text descriptor that's used to identify the node more quickly. */

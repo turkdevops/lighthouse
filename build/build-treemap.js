@@ -8,7 +8,6 @@
 /** @typedef {import('../lighthouse-core/lib/i18n/locales').LhlMessages} LhlMessages */
 
 const fs = require('fs');
-const {buildTreemapReport} = require('./build-report.js');
 const GhPagesApp = require('./gh-pages-app.js');
 const {LH_ROOT} = require('../root.js');
 
@@ -19,10 +18,9 @@ const {LH_ROOT} = require('../root.js');
  */
 function buildStrings() {
   const locales = require('../lighthouse-core/lib/i18n/locales.js');
-  const UIStrings = require(
-    // Prevent `tsc -p .` from evaluating util.js using core types, it is already typchecked by `tsc -p lighthouse-treemap`.
-    '' + '../lighthouse-treemap/app/src/util.js'
-  ).UIStrings;
+  // TODO(esmodules): use dynamic import when build/ is esm.
+  const utilCode = fs.readFileSync(LH_ROOT + '/lighthouse-treemap/app/src/util.js', 'utf-8');
+  const {UIStrings} = eval(utilCode.replace('export ', '') + '\nmodule.exports = TreemapUtil;');
   const strings = /** @type {Record<LH.Locale, LhlMessages>} */ ({});
 
   for (const [locale, lhlMessages] of Object.entries(locales)) {
@@ -46,33 +44,25 @@ function buildStrings() {
  * Build treemap app, optionally deploying to gh-pages if `--deploy` flag was set.
  */
 async function run() {
-  await buildTreemapReport();
-
   const app = new GhPagesApp({
     name: 'treemap',
     appDir: `${LH_ROOT}/lighthouse-treemap/app`,
     html: {path: 'index.html'},
     stylesheets: [
-      fs.readFileSync(require.resolve('tabulator-tables/dist/css/tabulator.min.css'), 'utf8'),
+      {path: require.resolve('tabulator-tables/dist/css/tabulator.min.css')},
       {path: 'styles/*'},
     ],
     javascripts: [
-      /* eslint-disable max-len */
-      fs.readFileSync(require.resolve('idb-keyval/dist/idb-keyval-min.js'), 'utf8'),
-      fs.readFileSync(require.resolve('event-target-shim/umd'), 'utf8'),
-      fs.readFileSync(require.resolve('webtreemap-cdt'), 'utf8'),
-      fs.readFileSync(require.resolve('tabulator-tables/dist/js/tabulator_core.js'), 'utf8'),
-      fs.readFileSync(require.resolve('tabulator-tables/dist/js/modules/sort.js'), 'utf8'),
-      fs.readFileSync(require.resolve('tabulator-tables/dist/js/modules/format.js'), 'utf8'),
-      fs.readFileSync(require.resolve('tabulator-tables/dist/js/modules/resize_columns.js'), 'utf8'),
-      fs.readFileSync(require.resolve('pako/dist/pako_inflate.js'), 'utf-8'),
-      /* eslint-enable max-len */
       buildStrings(),
-      {path: '../../dist/report/treemap.js'},
-      {path: '../../lighthouse-viewer/app/src/drag-and-drop.js'},
-      {path: '../../lighthouse-viewer/app/src/github-api.js'},
-      {path: '../../lighthouse-viewer/app/src/firebase-auth.js'},
-      {path: 'src/**/*'},
+      {path: require.resolve('idb-keyval/dist/idb-keyval-min.js')},
+      {path: require.resolve('event-target-shim/umd')},
+      {path: require.resolve('webtreemap-cdt')},
+      {path: require.resolve('tabulator-tables/dist/js/tabulator_core.js')},
+      {path: require.resolve('tabulator-tables/dist/js/modules/sort.js')},
+      {path: require.resolve('tabulator-tables/dist/js/modules/format.js')},
+      {path: require.resolve('tabulator-tables/dist/js/modules/resize_columns.js')},
+      {path: require.resolve('pako/dist/pako_inflate.js')},
+      {path: 'src/main.js', rollup: true},
     ],
     assets: [
       {path: 'images/**/*'},

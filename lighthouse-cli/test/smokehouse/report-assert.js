@@ -159,23 +159,32 @@ function makeComparison(name, actualResult, expectedResult) {
  * @param {Smokehouse.ExpectedRunnerResult} expected
  */
 function pruneExpectations(localConsole, lhr, expected) {
-  const userAgent = lhr.environment.hostUserAgent;
-  const userAgentMatch = /Chrome\/(\d+)/.exec(userAgent); // Chrome/85.0.4174.0
-  if (!userAgentMatch) throw new Error('Could not get chrome version.');
-  const actualChromeVersion = Number(userAgentMatch[1]);
+  const isFraggleRock = lhr.configSettings.channel === 'fraggle-rock-cli';
+
+  /**
+   * Lazily compute the Chrome version because some reports are explicitly asserting error conditions.
+   * @returns {number}
+   */
+  function getChromeVersion() {
+    const userAgent = lhr.environment.hostUserAgent;
+    const userAgentMatch = /Chrome\/(\d+)/.exec(userAgent); // Chrome/85.0.4174.0
+    if (!userAgentMatch) throw new Error('Could not get chrome version.');
+    return Number(userAgentMatch[1]);
+  }
+
   /**
    * @param {*} obj
    */
   function failsChromeVersionCheck(obj) {
-    if (obj._minChromiumMilestone && actualChromeVersion < obj._minChromiumMilestone) return true;
-    if (obj._maxChromiumMilestone && actualChromeVersion > obj._maxChromiumMilestone) return true;
+    if (obj._minChromiumMilestone && getChromeVersion() < obj._minChromiumMilestone) return true;
+    if (obj._maxChromiumMilestone && getChromeVersion() > obj._maxChromiumMilestone) return true;
     return false;
   }
 
   /**
    * @param {*} obj
    */
-  function pruneNewerChromeExpectations(obj) {
+  function pruneRecursively(obj) {
     for (const key of Object.keys(obj)) {
       const value = obj[key];
       if (!value || typeof value !== 'object') {
@@ -186,20 +195,36 @@ function pruneExpectations(localConsole, lhr, expected) {
         localConsole.log([
           `[${key}] failed chrome version check, pruning expectation:`,
           JSON.stringify(value, null, 2),
-          `Actual Chromium version: ${actualChromeVersion}`,
+          `Actual Chromium version: ${getChromeVersion()}`,
+        ].join(' '));
+        delete obj[key];
+      } else if (value._legacyOnly && isFraggleRock) {
+        localConsole.log([
+          `[${key}] marked legacy only but run is Fraggle Rock, pruning expectation:`,
+          JSON.stringify(value, null, 2),
+        ].join(' '));
+        delete obj[key];
+      } else if (value._fraggleRockOnly && !isFraggleRock) {
+        localConsole.log([
+          `[${key}] marked Fraggle Rock only but run is legacy, pruning expectation:`,
+          JSON.stringify(value, null, 2),
+          `Actual channel: ${lhr.configSettings.channel}`,
         ].join(' '));
         delete obj[key];
       } else {
-        pruneNewerChromeExpectations(value);
+        pruneRecursively(value);
       }
     }
+
+    delete obj._legacyOnly;
+    delete obj._fraggleRockOnly;
     delete obj._minChromiumMilestone;
     delete obj._maxChromiumMilestone;
   }
 
   const cloned = cloneDeep(expected);
 
-  pruneNewerChromeExpectations(cloned);
+  pruneRecursively(cloned);
   return cloned;
 }
 

@@ -36,8 +36,6 @@ export class ReportRenderer {
   constructor(dom) {
     /** @type {DOM} */
     this._dom = dom;
-    /** @type {ParentNode} */
-    this._templateContext = this._dom.document();
   }
 
   /**
@@ -57,20 +55,11 @@ export class ReportRenderer {
   }
 
   /**
-   * Define a custom element for <templates> to be extracted from. For example:
-   *     this.setTemplateContext(new DOMParser().parseFromString(htmlStr, 'text/html'))
-   * @param {ParentNode} context
-   */
-  setTemplateContext(context) {
-    this._templateContext = context;
-  }
-
-  /**
    * @param {LH.ReportResult} report
    * @return {DocumentFragment}
    */
   _renderReportTopbar(report) {
-    const el = this._dom.cloneTemplate('#tmpl-lh-topbar', this._templateContext);
+    const el = this._dom.createComponent('topbar');
     const metadataUrl = this._dom.find('a.lh-topbar__url', el);
     metadataUrl.textContent = report.finalUrl;
     metadataUrl.title = report.finalUrl;
@@ -82,8 +71,8 @@ export class ReportRenderer {
    * @return {DocumentFragment}
    */
   _renderReportHeader() {
-    const el = this._dom.cloneTemplate('#tmpl-lh-heading', this._templateContext);
-    const domFragment = this._dom.cloneTemplate('#tmpl-lh-scores-wrapper', this._templateContext);
+    const el = this._dom.createComponent('heading');
+    const domFragment = this._dom.createComponent('scoresWrapper');
     const placeholder = this._dom.find('.lh-scores-wrapper-placeholder', el);
     placeholder.replaceWith(domFragment);
     return el;
@@ -94,7 +83,7 @@ export class ReportRenderer {
    * @return {DocumentFragment}
    */
   _renderReportFooter(report) {
-    const footer = this._dom.cloneTemplate('#tmpl-lh-footer', this._templateContext);
+    const footer = this._dom.createComponent('footer');
 
     const env = this._dom.find('.lh-env__items', footer);
     env.id = 'runtime-settings';
@@ -123,7 +112,7 @@ export class ReportRenderer {
     for (const runtime of runtimeValues) {
       if (!runtime.description) continue;
 
-      const item = this._dom.cloneTemplate('#tmpl-lh-env__items', env);
+      const item = this._dom.createComponent('envItem');
       this._dom.find('.lh-env__name', item).textContent = runtime.name;
       this._dom.find('.lh-env__description', item).textContent = runtime.description;
       env.appendChild(item);
@@ -144,7 +133,7 @@ export class ReportRenderer {
       return this._dom.createElement('div');
     }
 
-    const container = this._dom.cloneTemplate('#tmpl-lh-warnings--toplevel', this._templateContext);
+    const container = this._dom.createComponent('warningsToplevel');
     const message = this._dom.find('.lh-warnings__msg', container);
     message.textContent = Util.i18n.strings.toplevelWarningsMessage;
 
@@ -212,16 +201,12 @@ export class ReportRenderer {
     });
 
     const categoryRenderer = new CategoryRenderer(this._dom, detailsRenderer);
-    categoryRenderer.setTemplateContext(this._templateContext);
 
     /** @type {Record<string, CategoryRenderer>} */
     const specificCategoryRenderers = {
       performance: new PerformanceCategoryRenderer(this._dom, detailsRenderer),
       pwa: new PwaCategoryRenderer(this._dom, detailsRenderer),
     };
-    Object.values(specificCategoryRenderers).forEach(renderer => {
-      renderer.setTemplateContext(this._templateContext);
-    });
 
     const headerContainer = this._dom.createElement('div');
     headerContainer.appendChild(this._renderReportHeader());
@@ -239,7 +224,7 @@ export class ReportRenderer {
     }
 
     if (scoreHeader) {
-      const scoreScale = this._dom.cloneTemplate('#tmpl-lh-scorescale', this._templateContext);
+      const scoreScale = this._dom.createComponent('scorescale');
       const scoresContainer = this._dom.find('.lh-scores-container', headerContainer);
       scoreHeader.append(
         ...this._renderScoreGauges(report, categoryRenderer, specificCategoryRenderers));

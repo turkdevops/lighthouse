@@ -5,23 +5,15 @@
  */
 'use strict';
 
-/* global window */
+const fs = require('fs');
+const {LH_ROOT} = require('../root.js');
 
-// TODO(esmodules): delete when viewer app is esm.
+/* eslint-disable max-len */
+const FLOW_REPORT_TEMPLATE = fs.readFileSync(`${LH_ROOT}/flow-report/assets/standalone-flow-template.html`, 'utf8');
+const FLOW_REPORT_JAVASCRIPT = fs.readFileSync(`${LH_ROOT}/dist/report/flow.js`, 'utf8');
+/* eslint-enable max-len */
 
-import {DOM} from '../renderer/dom.js';
-import {Logger} from '../renderer/logger.js';
-import {ReportRenderer} from '../renderer/report-renderer.js';
-import {ReportUIFeatures} from '../renderer/report-ui-features.js';
-import {TextEncoding} from '../renderer/text-encoding.js';
-
-// @ts-expect-error
-window.DOM = DOM;
-// @ts-expect-error
-window.Logger = Logger;
-// @ts-expect-error
-window.ReportRenderer = ReportRenderer;
-// @ts-expect-error
-window.ReportUIFeatures = ReportUIFeatures;
-// @ts-expect-error
-window.TextEncoding = TextEncoding;
+module.exports = {
+  FLOW_REPORT_TEMPLATE,
+  FLOW_REPORT_JAVASCRIPT,
+};

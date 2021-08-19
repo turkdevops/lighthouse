@@ -5,7 +5,16 @@
  */
 'use strict';
 
-/* global DOM, ViewerUIFeatures, ReportRenderer, DragAndDrop, GithubApi, PSIApi, logger, idbKeyval, TextEncoding */
+import idbKeyval from 'idb-keyval';
+import {DragAndDrop} from './drag-and-drop.js';
+import {GithubApi} from './github-api.js';
+import {PSIApi} from './psi-api';
+import {ViewerUIFeatures} from './viewer-ui-features.js';
+import {DOM} from '../../../report/renderer/dom.js';
+import {ReportRenderer} from '../../../report/renderer/report-renderer.js';
+import {TextEncoding} from '../../../report/renderer/text-encoding.js';
+
+/* global logger */
 
 /** @typedef {import('./psi-api').PSIParams} PSIParams */
 
@@ -27,7 +36,7 @@ function find(query, context) {
 /**
  * Class that manages viewing Lighthouse reports.
  */
-class LighthouseReportViewer {
+export class LighthouseReportViewer {
   constructor() {
     this._onPaste = this._onPaste.bind(this);
     this._onSaveJson = this._onSaveJson.bind(this);
@@ -188,11 +197,13 @@ class LighthouseReportViewer {
   _replaceReportHtml(json) {
     // Allow users to view the runnerResult
     if ('lhr' in json) {
-      json = /** @type {LH.RunnerResult} */ (json).lhr;
+      const runnerResult = /** @type {LH.RunnerResult} */ (/** @type {unknown} */ (json));
+      json = runnerResult.lhr;
     }
     // Allow users to drop in PSI's json
     if ('lighthouseResult' in json) {
-      json = /** @type {{lighthouseResult: LH.Result}} */ (json).lighthouseResult;
+      const psiResp = /** @type {{lighthouseResult: LH.Result}} */ (/** @type {unknown} */ (json));
+      json = psiResp.lighthouseResult;
     }
 
     // Install as global for easier debugging
@@ -231,7 +242,6 @@ class LighthouseReportViewer {
       features.initFeatures(json);
     } catch (e) {
       logger.error(`Error rendering report: ${e.message}`);
-      dom.resetTemplates(); // TODO(bckenny): hack
       container.textContent = '';
       throw e;
     } finally {
@@ -445,9 +455,4 @@ class LighthouseReportViewer {
     const placeholder = document.querySelector('.viewer-placeholder-inner');
     if (placeholder) placeholder.classList.toggle('lh-loading', force);
   }
-}
-
-// node export for testing.
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = LighthouseReportViewer;
 }

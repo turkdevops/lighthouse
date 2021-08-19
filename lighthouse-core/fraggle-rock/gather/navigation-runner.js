@@ -88,6 +88,7 @@ async function _navigate(navigationContext) {
   try {
     const {finalUrl, warnings} = await gotoURL(driver, requestedUrl, {
       ...navigationContext.navigation,
+      debugNavigation: config.settings.debugNavigation,
       maxWaitForFcp: config.settings.maxWaitForFcp,
       maxWaitForLoad: config.settings.maxWaitForLoad,
       waitUntil: navigationContext.navigation.pauseAfterFcpMs ? ['fcp', 'load'] : ['load'],
@@ -211,11 +212,12 @@ async function _navigations({driver, config, requestedUrl, computedCache}) {
       computedCache,
     };
 
+    let shouldHaltNavigations = false;
     const navigationResult = await _navigation(navigationContext);
     if (navigation.loadFailureMode === 'fatal') {
       if (navigationResult.pageLoadError) {
         artifacts.PageLoadError = navigationResult.pageLoadError;
-        break;
+        shouldHaltNavigations = true;
       }
 
       artifacts.URL = {requestedUrl, finalUrl: navigationResult.finalUrl};
@@ -223,6 +225,7 @@ async function _navigations({driver, config, requestedUrl, computedCache}) {
 
     LighthouseRunWarnings.push(...navigationResult.warnings);
     Object.assign(artifacts, navigationResult.artifacts);
+    if (shouldHaltNavigations) break;
   }
 
   return {artifacts: {...artifacts, LighthouseRunWarnings}};
