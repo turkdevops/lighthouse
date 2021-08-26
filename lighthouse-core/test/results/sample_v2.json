@@ -61,7 +61,7 @@
     "viewport": {
       "id": "viewport",
       "title": "Has a `<meta name=\"viewport\">` tag with `width` or `initial-scale`",
-      "description": "Add a `<meta name=\"viewport\">` tag to optimize your app for mobile screens. [Learn more](https://web.dev/viewport/).",
+      "description": "A `<meta name=\"viewport\">` not only optimizes your app for mobile screen sizes, but also prevents [a 300 millisecond delay to user input](https://developers.google.com/web/updates/2013/12/300ms-tap-delay-gone-away). [Learn more](https://web.dev/viewport/).",
       "score": 1,
       "scoreDisplayMode": "binary",
       "warnings": []
@@ -1829,6 +1829,43 @@
       "score": null,
       "scoreDisplayMode": "informative",
       "displayValue": "1 element found",
+      "details": {
+        "type": "table",
+        "headings": [
+          {
+            "key": "node",
+            "itemType": "node",
+            "text": "Element"
+          }
+        ],
+        "items": [
+          {
+            "node": {
+              "type": "node",
+              "lhId": "page-1-IMG",
+              "path": "3,HTML,1,BODY,14,IMG",
+              "selector": "body > img",
+              "boundingRect": {
+                "top": 574,
+                "bottom": 654,
+                "left": 132,
+                "right": 252,
+                "width": 120,
+                "height": 80
+              },
+              "snippet": "<img src=\"lighthouse-480x318.jpg?iar2\" width=\"120\" height=\"80\">",
+              "nodeLabel": "img"
+            }
+          }
+        ]
+      }
+    },
+    "lcp-lazy-loaded": {
+      "id": "lcp-lazy-loaded",
+      "title": "Largest Contentful Paint image was not lazily loaded",
+      "description": "Above-the-fold images that are lazily loaded render later in the page lifecycle, which can delay the largest contentful paint. [Learn more](https://web.dev/lcp-lazy-loading/).",
+      "score": 1,
+      "scoreDisplayMode": "binary",
       "details": {
         "type": "table",
         "headings": [
@@ -5002,7 +5039,8 @@
             "mainthread-work-breakdown",
             "dom-size",
             "duplicated-javascript",
-            "legacy-javascript"
+            "legacy-javascript",
+            "viewport"
           ]
         },
         {
@@ -5191,6 +5229,11 @@
           "group": "diagnostics"
         },
         {
+          "id": "lcp-lazy-loaded",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
           "id": "layout-shift-elements",
           "weight": 0,
           "group": "diagnostics"
@@ -5217,6 +5260,11 @@
         },
         {
           "id": "unsized-images",
+          "weight": 0,
+          "group": "diagnostics"
+        },
+        {
+          "id": "viewport",
           "weight": 0,
           "group": "diagnostics"
         },
@@ -6351,6 +6399,12 @@
       {
         "startTime": 0,
         "name": "lh:audit:largest-contentful-paint-element",
+        "duration": 100,
+        "entryType": "measure"
+      },
+      {
+        "startTime": 0,
+        "name": "lh:audit:lcp-lazy-loaded",
         "duration": 100,
         "entryType": "measure"
       },
@@ -7689,9 +7743,16 @@
       ],
       "lighthouse-core/lib/i18n/i18n.js | columnElement": [
         "audits[largest-contentful-paint-element].details.headings[0].text",
+        "audits[lcp-lazy-loaded].details.headings[0].text",
         "audits[layout-shift-elements].details.headings[0].text",
         "audits[non-composited-animations].details.headings[0].text",
         "audits[dom-size].details.headings[1].text"
+      ],
+      "lighthouse-core/audits/lcp-lazy-loaded.js | title": [
+        "audits[lcp-lazy-loaded].title"
+      ],
+      "lighthouse-core/audits/lcp-lazy-loaded.js | description": [
+        "audits[lcp-lazy-loaded].description"
       ],
       "lighthouse-core/audits/layout-shift-elements.js | title": [
         "audits[layout-shift-elements].title"

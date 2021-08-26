@@ -4,12 +4,21 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-import FlowResult from '../../types/lhr/flow';
+import FlowResult_ from '../../types/lhr/flow';
+import * as Settings from '../../types/lhr/settings';
+
+import '../../report/types/html-renderer';
 
 declare global {
   interface Window {
-    __LIGHTHOUSE_FLOW_JSON__: FlowResult;
+    __LIGHTHOUSE_FLOW_JSON__: FlowResult_;
     __initLighthouseFlowReport__: () => void;
+  }
+
+  // Expose global types in LH namespace.
+  module LH {
+    export type FlowResult = FlowResult_;
+    export type ConfigSettings = Settings.ConfigSettings;
   }
 }
 
