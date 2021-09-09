@@ -23,6 +23,7 @@ const {getBaseArtifacts, finalizeArtifacts} = require('./base-artifacts.js');
 const i18n = require('../../lib/i18n/i18n.js');
 const LighthouseError = require('../../lib/lh-error.js');
 const {getPageLoadError} = require('../../lib/navigation-error.js');
+const Trace = require('../../gather/gatherers/trace.js');
 const DevtoolsLog = require('../../gather/gatherers/devtools-log.js');
 const NetworkRecords = require('../../computed/network-records.js');
 
@@ -32,6 +33,7 @@ const NetworkRecords = require('../../computed/network-records.js');
  * @property {LH.Config.FRConfig} config
  * @property {LH.Config.NavigationDefn} navigation
  * @property {string} requestedUrl
+ * @property {LH.FRBaseArtifacts} baseArtifacts
  * @property {Map<string, LH.ArbitraryEqualityMap>} computedCache
  */
 
@@ -105,21 +107,36 @@ async function _navigate(navigationContext) {
 /**
  * @param {NavigationContext} navigationContext
  * @param {PhaseState} phaseState
- * @return {Promise<{devtoolsLog: LH.DevtoolsLog, records: Array<LH.Artifacts.NetworkRequest>} | undefined>}
+ * @return {Promise<{devtoolsLog?: LH.DevtoolsLog, records?: Array<LH.Artifacts.NetworkRequest>, trace?: LH.Trace}>}
  */
-async function _collectNetworkData(navigationContext, phaseState) {
+async function _collectDebugData(navigationContext, phaseState) {
   const devtoolsLogArtifactDefn = phaseState.artifactDefinitions.find(
     definition => definition.gatherer.instance.meta.symbol === DevtoolsLog.symbol
   );
-  if (!devtoolsLogArtifactDefn) return undefined;
+  const traceArtifactDefn = phaseState.artifactDefinitions.find(
+    definition => definition.gatherer.instance.meta.symbol === Trace.symbol
+  );
 
-  const devtoolsLogArtifactId = devtoolsLogArtifactDefn.id;
-  const artifactDefinitions = [devtoolsLogArtifactDefn];
+  const artifactDefinitions = [devtoolsLogArtifactDefn, traceArtifactDefn].filter(
+    /**
+     * @param {LH.Config.AnyArtifactDefn | undefined} defn
+     * @return {defn is LH.Config.AnyArtifactDefn}
+     */
+    defn => Boolean(defn)
+  );
+  if (!artifactDefinitions.length) return {};
+
   await collectPhaseArtifacts({...phaseState, phase: 'getArtifact', artifactDefinitions});
+  const getArtifactState = phaseState.artifactState.getArtifact;
 
-  const devtoolsLog = await phaseState.artifactState.getArtifact[devtoolsLogArtifactId];
-  const records = await NetworkRecords.request(devtoolsLog, navigationContext);
-  return {devtoolsLog, records};
+  const devtoolsLogArtifactId = devtoolsLogArtifactDefn && devtoolsLogArtifactDefn.id;
+  const devtoolsLog = devtoolsLogArtifactId && await getArtifactState[devtoolsLogArtifactId];
+  const records = devtoolsLog && await NetworkRecords.request(devtoolsLog, navigationContext);
+
+  const traceArtifactId = traceArtifactDefn && traceArtifactDefn.id;
+  const trace = traceArtifactId && await getArtifactState[traceArtifactId];
+
+  return {devtoolsLog, records, trace};
 }
 
 /**
@@ -137,12 +154,12 @@ async function _computeNavigationResult(
 ) {
   const {navigationError, finalUrl} = navigateResult;
   const warnings = [...setupResult.warnings, ...navigateResult.warnings];
-  const networkData = await _collectNetworkData(navigationContext, phaseState);
-  const pageLoadError = networkData
+  const debugData = await _collectDebugData(navigationContext, phaseState);
+  const pageLoadError = debugData.records
     ? getPageLoadError(navigationError, {
       url: finalUrl,
       loadFailureMode: navigationContext.navigation.loadFailureMode,
-      networkRecords: networkData.records,
+      networkRecords: debugData.records,
     })
     : navigationError;
 
@@ -154,7 +171,8 @@ async function _computeNavigationResult(
     /** @type {Partial<LH.GathererArtifacts>} */
     const artifacts = {};
     const pageLoadErrorId = `pageLoadError-${navigationContext.navigation.id}`;
-    if (networkData) artifacts.devtoolsLogs = {[pageLoadErrorId]: networkData.devtoolsLog};
+    if (debugData.devtoolsLog) artifacts.devtoolsLogs = {[pageLoadErrorId]: debugData.devtoolsLog};
+    if (debugData.trace) artifacts.traces = {[pageLoadErrorId]: debugData.trace};
 
     return {
       finalUrl,
@@ -182,6 +200,7 @@ async function _navigation(navigationContext) {
     computedCache: navigationContext.computedCache,
     artifactDefinitions: navigationContext.navigation.artifacts,
     artifactState,
+    baseArtifacts: navigationContext.baseArtifacts,
     settings: navigationContext.config.settings,
   };
 
@@ -197,10 +216,10 @@ async function _navigation(navigationContext) {
 }
 
 /**
- * @param {{driver: Driver, config: LH.Config.FRConfig, requestedUrl: string; computedCache: NavigationContext['computedCache']}} args
+ * @param {{driver: Driver, config: LH.Config.FRConfig, requestedUrl: string; baseArtifacts: LH.FRBaseArtifacts, computedCache: NavigationContext['computedCache']}} args
  * @return {Promise<{artifacts: Partial<LH.FRArtifacts & LH.FRBaseArtifacts>}>}
  */
-async function _navigations({driver, config, requestedUrl, computedCache}) {
+async function _navigations({driver, config, requestedUrl, baseArtifacts, computedCache}) {
   if (!config.navigations) throw new Error('No navigations configured');
 
   /** @type {Partial<LH.FRArtifacts & LH.FRBaseArtifacts>} */
@@ -214,6 +233,7 @@ async function _navigations({driver, config, requestedUrl, computedCache}) {
       navigation,
       requestedUrl,
       config,
+      baseArtifacts,
       computedCache,
     };
 
@@ -242,8 +262,6 @@ async function _navigations({driver, config, requestedUrl, computedCache}) {
 async function _cleanup({requestedUrl, driver, config}) {
   const didResetStorage = !config.settings.disableStorageReset;
   if (didResetStorage) await storage.clearDataForOrigin(driver.defaultSession, requestedUrl);
-
-  // TODO(FR-COMPAT): add driver.disconnect session tracking
 }
 
 /**
@@ -258,9 +276,10 @@ async function navigation(options) {
   return Runner.run(
     async () => {
       const driver = new Driver(page);
-      const {baseArtifacts} = await _setup({driver, config, requestedUrl});
-      const {artifacts} = await _navigations({driver, config, requestedUrl, computedCache});
-      await _cleanup({driver, config, requestedUrl});
+      const context = {driver, config, requestedUrl};
+      const {baseArtifacts} = await _setup(context);
+      const {artifacts} = await _navigations({...context, baseArtifacts, computedCache});
+      await _cleanup(context);
 
       return finalizeArtifacts(baseArtifacts, artifacts);
     },

@@ -1,10 +1,13 @@
 import fs from 'fs';
-import {SidebarFlow} from '../../src/sidebar/flow';
-import {render} from '@testing-library/preact';
-import {FunctionComponent} from 'preact';
-import {FlowResultContext} from '../../src/util';
 import {dirname} from 'path';
 import {fileURLToPath} from 'url';
+
+import {render} from '@testing-library/preact';
+import {FunctionComponent} from 'preact';
+
+import {SidebarFlow} from '../../src/sidebar/flow';
+import {FlowResultContext} from '../../src/util';
+
 
 const flowResult = JSON.parse(
   fs.readFileSync(
@@ -26,10 +29,10 @@ describe('SidebarFlow', () => {
   it('renders flow steps', async () => {
     const root = render(<SidebarFlow/>, {wrapper});
 
-    const navigation = root.getByText('Navigation (1)');
-    const timespan = root.getByText('Timespan (1)');
-    const snapshot = root.getByText('Snapshot (1)');
-    const navigation2 = root.getByText('Navigation (2)');
+    const navigation = root.getByText('Navigation report (www.mikescerealshack.co/)');
+    const timespan = root.getByText('Timespan report (www.mikescerealshack.co/search)');
+    const snapshot = root.getByText('Snapshot report (www.mikescerealshack.co/search)');
+    const navigation2 = root.getByText('Navigation report (www.mikescerealshack.co/corrections)');
 
     const links = root.getAllByRole('link') as HTMLAnchorElement[];
     expect(links.map(a => a.textContent)).toEqual([

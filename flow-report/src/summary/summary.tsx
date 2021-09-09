@@ -5,11 +5,12 @@
  */
 
 import {FunctionComponent} from 'preact';
-import {Gauge} from '../wrappers/gauge';
-import {CategoryRatio, FlowStepIcon} from '../common';
+import {useMemo} from 'preact/hooks';
+
+import {FlowSegment} from '../common';
 import {getScreenDimensions, getScreenshot, useDerivedStepNames, useFlowResult} from '../util';
 import {Util} from '../../../report/renderer/util';
-import {useMemo} from 'preact/hooks';
+import {CategoryScore} from '../wrappers/category-score';
 
 const DISPLAYED_CATEGORIES = ['performance', 'accessibility', 'best-practices', 'seo'];
 const THUMBNAIL_WIDTH = 50;
@@ -17,7 +18,7 @@ const THUMBNAIL_WIDTH = 50;
 const SummaryNavigationHeader: FunctionComponent<{url: string}> = ({url}) => {
   return (
     <div className="SummaryNavigationHeader" data-testid="SummaryNavigationHeader">
-      <FlowStepIcon/>
+      <FlowSegment/>
       <div className="SummaryNavigationHeader__url">{url}</div>
       <div className="SummaryNavigationHeader__category">Performance</div>
       <div className="SummaryNavigationHeader__category">Accessibility</div>
@@ -28,27 +29,17 @@ const SummaryNavigationHeader: FunctionComponent<{url: string}> = ({url}) => {
 };
 
 const SummaryCategory: FunctionComponent<{
-  gatherMode: LH.Result.GatherMode,
-  audits: LH.ReportResult['audits'],
   category: LH.ReportResult.Category|undefined,
   href: string,
-}> = ({gatherMode, audits, category, href}) => {
+}> = ({category, href}) => {
   return (
     <div className="SummaryCategory">
       {
         category ?
-          (
-            gatherMode === 'navigation' ?
-            <Gauge
-              category={category}
-              href={href}
-            /> :
-            <CategoryRatio
-              category={category}
-              audits={audits}
-              href={href}
-            />
-          ) :
+          <CategoryScore
+            category={category}
+            href={href}
+          /> :
           <div
             className="SummaryCategory__null"
             data-testid="SummaryCategory__null"
@@ -66,7 +57,6 @@ export const SummaryFlowStep: FunctionComponent<{
   label: string,
   hashIndex: number,
 }> = ({lhr, label, hashIndex}) => {
-  // TODO(FR-COMPAT): Store report results globally.
   const reportResult = useMemo(() => Util.prepareReportResult(lhr), [lhr]);
 
   const screenshot = reportResult.gatherMode !== 'timespan' ? getScreenshot(reportResult) : null;
@@ -81,7 +71,7 @@ export const SummaryFlowStep: FunctionComponent<{
         lhr.gatherMode === 'navigation' || hashIndex === 0 ?
           <SummaryNavigationHeader url={lhr.finalUrl}/> :
           <div className="SummaryFlowStep__divider">
-            <FlowStepIcon/>
+            <FlowSegment/>
             <div className="SummaryFlowStep__divider--line"/>
           </div>
       }
@@ -91,15 +81,13 @@ export const SummaryFlowStep: FunctionComponent<{
         src={screenshot || undefined}
         style={{width: THUMBNAIL_WIDTH, maxHeight: thumbnailHeight}}
       />
-      <FlowStepIcon mode={lhr.gatherMode}/>
+      <FlowSegment mode={lhr.gatherMode}/>
       <a className="SummaryFlowStep__label" href={`#index=${hashIndex}`}>{label}</a>
       {
         DISPLAYED_CATEGORIES.map(c => (
           <SummaryCategory
             key={c}
-            gatherMode={reportResult.gatherMode}
             category={reportResult.categories[c]}
-            audits={reportResult.audits}
             href={`#index=${hashIndex}&anchor=${c}`}
           />
         ))
@@ -151,7 +139,6 @@ export const SummaryHeader: FunctionComponent = () => {
     }
   }
 
-  // TODO(FR-COMPAT): Pluralize UI strings.
   const subtitleCounts = [];
   if (numNavigation) subtitleCounts.push(`${numNavigation} navigation reports`);
   if (numTimespan) subtitleCounts.push(`${numTimespan} timespan reports`);

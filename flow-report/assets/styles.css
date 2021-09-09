@@ -8,8 +8,10 @@
   --app-font-size: 12px;
   --base-spacing: 16px;
   --category-summary-font-size: 18px;
+  --gather-mode-icon-size: 16px;
   --half-base-spacing: calc(var(--base-spacing) / 2);
   --sidebar-flow-step-navigation-font-size: 14px;
+  --sidebar-selected-bg-color: #DDEEFF;
   --sidebar-summary-font-size: 14px;
   --sidebar-title-font-size: 16px;
   --summary-flow-step-label-font-size: 16px;
@@ -30,103 +32,26 @@
   overflow-y: auto;
 }
 
-.FlowStepIcon {
+.FlowSegment {
   height: 100%;
+  width: var(--gather-mode-icon-size);
   display: flex;
   flex-direction: column;
   align-items: center;
   margin: 0 18px;
+  color: var(--color-blue-A700);
 }
 
-.FlowStepIcon__top-line, .FlowStepIcon__bottom-line {
+.FlowSegment__top-line, .FlowSegment__bottom-line {
   width: 2px;
   flex-grow: 1;
   background-color: var(--color-blue-A700);
-}
-
-.GatherModeIcon {
-  display: flex;
-  width: 16px;
-  height: 16px;
-  align-items: center;
-  justify-content: center;
-}
-.GatherModeIcon--navigation::before {
-  content: '';
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--color-blue-A700);
-  display: block;
-}
-.GatherModeIcon--timespan::before {
-  content: '';
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: var(--color-blue-A700);
-  display: block;
-}
-.GatherModeIcon--snapshot::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--color-blue-A700);
-  display: block;
-}
-
-.CategoryRatio {
-  justify-self: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--category-summary-font-size);
-  min-height: var(--gauge-circle-size);
-  min-width: var(--gauge-circle-size);
-  text-decoration: none;
-}
-.CategoryRatio::before {
-  content: '';
-  height: var(--score-icon-size);
-  width: var(--score-icon-size);
-  margin: var(--score-icon-margin);
-}
-.CategoryRatio--pass {
-  color: var(--color-pass);
-}
-.CategoryRatio--pass::before {
-  background-color: var(--color-pass);
-  border-radius: 50%;
-}
-.CategoryRatio--average {
-  color: var(--color-average);
-}
-.CategoryRatio--average::before {
-  background-color: var(--color-average);
-}
-.CategoryRatio--fail {
-  color: var(--color-fail);
-}
-.CategoryRatio--fail::before {
-  border-left: calc(var(--score-icon-size) / 2) solid transparent;
-  border-right: calc(var(--score-icon-size) / 2) solid transparent;
-  border-bottom: var(--score-icon-size) solid var(--color-fail);
-}
-.CategoryRatio--null {
-  color: var(--color-gray-700);
-}
-.CategoryRatio--null::before {
-  border-radius: 50%;
-  border: 2px solid var(--color-gray-700);
 }
 
 .Separator {
   height: 1px;
   width: 100%;
   background-color: var(--color-gray-300);
-  margin-top: 12px;
-  margin-bottom: 12px;
 }
 
 .Sidebar {
@@ -138,18 +63,12 @@
 }
 
 .Sidebar--current {
-  background-color: var(--color-gray-200);
-  font-weight: bold;
-}
-
-.SidebarSectionTitle {
-  height: 16px;
-  margin: 32px 16px 0px 16px;
-  color: var(--color-gray-700);
+  background-color: var(--sidebar-selected-bg-color);
+  color: var(--color-blue-A700) !important;
 }
 
 .SidebarHeader {
-  margin: var(--base-spacing);
+  margin: 26px var(--base-spacing);
 }
 .SidebarHeader__title {
   font-size: var(--sidebar-title-font-size);
@@ -161,17 +80,34 @@
   width: max-content;
 }
 
-.SidebarRuntimeSettings > summary {
-  padding: 4px 16px;
-  list-style: none;
-  color: var(--color-gray-700);
+.SidebarRuntimeSettings {
+  margin: var(--base-spacing);
+  padding: var(--half-base-spacing);
+  background-color: var(--color-gray-50);
+  border-radius: 3px;
+}
+
+.SidebarRuntimeSettings__item {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+
+.SidebarRuntimeSettings__item--icon {
+  margin-right: 8px;
+  display: flex;
+  height: 16px;
+  width: 16px;
+  align-items: center;
+  justify-content: center;
 }
 
 .SidebarSummary {
   width: 100%;
   display: flex;
-  padding: var(--half-base-spacing) var(--base-spacing);
+  padding: var(--half-base-spacing) 0px;
   align-items: center;
+  margin: var(--half-base-spacing) 0px;
 }
 
 .SidebarSummary__icon {
@@ -181,16 +117,15 @@
   align-items: center;
   justify-content: center;
   /* Flex column-gap workaround for safari */
-  margin-right: var(--base-spacing);
-}
-.SidebarSummary__icon::before {
-  content: '☰';
-  font-weight: normal;
-  color: var(--color-blue-A700);
+  margin: 0px 18px;
 }
 
 .SidebarSummary__label {
   font-size: var(--sidebar-summary-font-size);
+}
+
+.SidebarFlow {
+  margin: var(--half-base-spacing) 0px;
 }
 
 .SidebarFlowStep {
@@ -200,12 +135,15 @@
 
 .SidebarFlowStep__label {
   grid-column: 2;
-  margin-top: 14px;
-  margin-bottom: 14px;
+  margin: var(--half-base-spacing) 0px;
   justify-self: left;
 }
 .SidebarFlowStep__label--navigation {
   font-size: var(--sidebar-flow-step-navigation-font-size);
+}
+
+.SidebarFlowSeparator > .FlowSegment {
+  height: var(--half-base-spacing);
 }
 
 .Summary {
@@ -235,35 +173,36 @@
   grid-template-columns: min-content min-content 4fr 1fr 1fr 1fr 1fr;
   align-items: center;
 }
-
-/* Hide end segments of sidebar flow */
-.SidebarFlow > :first-child .FlowStepIcon > .FlowStepIcon__top-line {
-  background-color: transparent;
+.SummaryFlow .lh-fraction__content {
+  padding: 0px;
+  min-width: unset;
 }
-.SidebarFlow > :last-child .FlowStepIcon > .FlowStepIcon__bottom-line {
+
+/* Hide top segment of sidebar flow */
+.SidebarFlow > :first-child .FlowSegment > .FlowSegment__top-line {
   background-color: transparent;
 }
 
 /* Hide end segments of summary flow */
-.SummaryFlow > :first-child > .FlowStepIcon > .FlowStepIcon__top-line {
+.SummaryFlow > :first-child > .FlowSegment > .FlowSegment__top-line {
   background-color: transparent;
 }
-.SummaryFlow > :last-child > .FlowStepIcon > .FlowStepIcon__bottom-line {
+.SummaryFlow > :last-child > .FlowSegment > .FlowSegment__bottom-line {
   background-color: transparent;
 }
 
 /* Hide segment for first navigation header */
-.SummaryFlow > :first-child .SummaryNavigationHeader .FlowStepIcon__bottom-line {
+.SummaryFlow > :first-child .SummaryNavigationHeader .FlowSegment__bottom-line {
   background-color: transparent;
 }
-.SummaryFlow > :first-child .SummaryNavigationHeader .FlowStepIcon__top-line {
+.SummaryFlow > :first-child .SummaryNavigationHeader .FlowSegment__top-line {
   background-color: transparent;
 }
 
 .SummaryFlowStep {
   display: contents;
 }
-.SummaryFlowStep .FlowStepIcon {
+.SummaryFlowStep .FlowSegment {
   grid-column: 2;
 }
 

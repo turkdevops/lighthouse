@@ -5,15 +5,17 @@
  */
 
 import fs from 'fs';
-import {SummaryHeader, SummaryFlowStep} from '../../src/summary/summary';
-import {render} from '@testing-library/preact';
 import {dirname} from 'path';
 import {fileURLToPath} from 'url';
+
+import {render} from '@testing-library/preact';
 import {FunctionComponent} from 'preact';
+
+import {SummaryHeader, SummaryFlowStep} from '../../src/summary/summary';
 import {FlowResultContext} from '../../src/util';
 import {ReportRendererProvider} from '../../src/wrappers/report-renderer';
 
-const flowResult:LH.FlowResult = JSON.parse(
+const flowResult: LH.FlowResult = JSON.parse(
   fs.readFileSync(
     // eslint-disable-next-line max-len
     `${dirname(fileURLToPath(import.meta.url))}/../../../lighthouse-core/test/fixtures/fraggle-rock/reports/sample-lhrs.json`,
@@ -60,7 +62,7 @@ describe('SummaryFlowStep', () => {
     const screenshot = root.getByTestId('SummaryFlowStep__screenshot') as HTMLImageElement;
     expect(screenshot.src).toMatch(/data:image\/jpeg;base64/);
 
-    const gauges = root.getAllByTestId('Gauge');
+    const gauges = root.getAllByTestId('CategoryScore');
     expect(gauges).toHaveLength(4);
 
     const links = root.getAllByRole('link') as HTMLAnchorElement[];
@@ -88,7 +90,7 @@ describe('SummaryFlowStep', () => {
     expect(screenshot.src).toBeFalsy();
 
     expect(root.getByTestId('SummaryCategory__null'));
-    const gauges = root.getAllByTestId('CategoryRatio');
+    const gauges = root.getAllByTestId('CategoryScore');
     expect(gauges).toHaveLength(3);
 
     const links = root.getAllByRole('link') as HTMLAnchorElement[];
@@ -115,7 +117,7 @@ describe('SummaryFlowStep', () => {
     const screenshot = root.getByTestId('SummaryFlowStep__screenshot') as HTMLImageElement;
     expect(screenshot.src).toMatch(/data:image\/jpeg;base64/);
 
-    const gauges = root.getAllByTestId('CategoryRatio');
+    const gauges = root.getAllByTestId('CategoryScore');
     expect(gauges).toHaveLength(4);
 
     const links = root.getAllByRole('link') as HTMLAnchorElement[];
