@@ -365,7 +365,7 @@ const expectations = {
         },
       },
       'js-libraries': {
-        score: 1,
+        scoreDisplayMode: 'informative',
         details: {
           items: [{
             name: 'jQuery',
@@ -443,4 +443,4 @@ const expectations = {
   },
 };
 
-module.exports = expectations;
+export {expectations};
