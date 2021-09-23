@@ -8,9 +8,9 @@ import {FunctionComponent} from 'preact';
 import {useMemo} from 'preact/hooks';
 
 import {FlowSegment, Separator} from '../common';
-import {getScreenDimensions, getScreenshot, useDerivedStepNames, useFlowResult} from '../util';
+import {getScreenDimensions, getScreenshot, useFlowResult} from '../util';
 import {Util} from '../../../report/renderer/util';
-import {CategoryScore} from '../wrappers/category-score';
+import {SummaryCategory} from './category';
 
 const DISPLAYED_CATEGORIES = ['performance', 'accessibility', 'best-practices', 'seo'];
 const THUMBNAIL_WIDTH = 50;
@@ -29,29 +29,6 @@ const SummaryNavigationHeader: FunctionComponent<{url: string}> = ({url}) => {
       <div className="SummaryNavigationHeader__category">Accessibility</div>
       <div className="SummaryNavigationHeader__category">Best Practices</div>
       <div className="SummaryNavigationHeader__category">SEO</div>
-    </div>
-  );
-};
-
-const SummaryCategory: FunctionComponent<{
-  category: LH.ReportResult.Category|undefined,
-  href: string,
-  gatherMode: LH.Result.GatherMode,
-}> = ({category, href, gatherMode}) => {
-  return (
-    <div className="SummaryCategory">
-      {
-        category ?
-          <CategoryScore
-            category={category}
-            href={href}
-            gatherMode={gatherMode}
-          /> :
-          <div
-            className="SummaryCategory__null"
-            data-testid="SummaryCategory__null"
-          />
-      }
     </div>
   );
 };
@@ -113,15 +90,14 @@ export const SummaryFlowStep: FunctionComponent<{
  */
 const SummaryFlow: FunctionComponent = () => {
   const flowResult = useFlowResult();
-  const stepNames = useDerivedStepNames();
   return (
     <div className="SummaryFlow">
       {
-        flowResult.lhrs.map((lhr, index) =>
+        flowResult.steps.map((step, index) =>
           <SummaryFlowStep
-            key={lhr.fetchTime}
-            lhr={lhr}
-            label={stepNames[index]}
+            key={step.lhr.fetchTime}
+            lhr={step.lhr}
+            label={step.name}
             hashIndex={index}
           />
         )
@@ -136,8 +112,8 @@ export const SummaryHeader: FunctionComponent = () => {
   let numNavigation = 0;
   let numTimespan = 0;
   let numSnapshot = 0;
-  for (const lhr of flowResult.lhrs) {
-    switch (lhr.gatherMode) {
+  for (const step of flowResult.steps) {
+    switch (step.lhr.gatherMode) {
       case 'navigation':
         numNavigation++;
         break;
