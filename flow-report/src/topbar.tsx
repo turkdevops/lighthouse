@@ -9,8 +9,8 @@ import {useState} from 'preact/hooks';
 
 import {HelpDialog} from './help-dialog';
 import {getFilenamePrefix} from '../../report/generator/file-namer';
-import {useUIStrings} from './i18n/i18n';
-import {HamburgerIcon} from './icons';
+import {useLocalizedStrings} from './i18n/i18n';
+import {HamburgerIcon, InfoIcon} from './icons';
 import {useFlowResult} from './util';
 import {useReportRenderer} from './wrappers/report-renderer';
 
@@ -79,7 +79,7 @@ export const Topbar: FunctionComponent<{onMenuClick: JSX.MouseEventHandler<HTMLB
 ({onMenuClick}) => {
   const flowResult = useFlowResult();
   const {dom} = useReportRenderer();
-  const strings = useUIStrings();
+  const strings = useLocalizedStrings();
   const [showHelpDialog, setShowHelpDialog] = useState(false);
 
   return (
@@ -98,8 +98,12 @@ export const Topbar: FunctionComponent<{onMenuClick: JSX.MouseEventHandler<HTMLB
       <div style={{flexGrow: 1}} />
       <TopbarButton
         onClick={() => setShowHelpDialog(previous => !previous)}
-        label="Button that toggles the help dialog">
-        {strings.helpLabel}
+        label="Button that toggles the help dialog"
+      >
+        <div className="Topbar__help-label">
+          <InfoIcon/>
+          {strings.helpLabel}
+        </div>
       </TopbarButton>
       {showHelpDialog ?
         <HelpDialog onClose={() => setShowHelpDialog(false)} /> :

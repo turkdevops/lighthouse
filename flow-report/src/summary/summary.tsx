@@ -11,13 +11,13 @@ import {FlowSegment, FlowStepThumbnail, Separator} from '../common';
 import {getModeDescription, useFlowResult} from '../util';
 import {Util} from '../../../report/renderer/util';
 import {SummaryCategory} from './category';
-import {useUIStrings} from '../i18n/i18n';
+import {useStringFormatter, useLocalizedStrings} from '../i18n/i18n';
 
 const DISPLAYED_CATEGORIES = ['performance', 'accessibility', 'best-practices', 'seo'];
-const THUMBNAIL_WIDTH = 50;
+const THUMBNAIL_WIDTH = 40;
 
 const SummaryNavigationHeader: FunctionComponent<{lhr: LH.Result}> = ({lhr}) => {
-  const strings = useUIStrings();
+  const strings = useLocalizedStrings();
 
   return (
     <div className="SummaryNavigationHeader" data-testid="SummaryNavigationHeader">
@@ -50,7 +50,7 @@ export const SummaryFlowStep: FunctionComponent<{
   hashIndex: number,
 }> = ({lhr, label, hashIndex}) => {
   const reportResult = useMemo(() => Util.prepareReportResult(lhr), [lhr]);
-  const strings = useUIStrings();
+  const strings = useLocalizedStrings();
   const modeDescription = getModeDescription(lhr.gatherMode, strings);
 
   return (
@@ -107,7 +107,8 @@ const SummaryFlow: FunctionComponent = () => {
 
 export const SummaryHeader: FunctionComponent = () => {
   const flowResult = useFlowResult();
-  const strings = useUIStrings();
+  const strings = useLocalizedStrings();
+  const str_ = useStringFormatter();
 
   let numNavigation = 0;
   let numTimespan = 0;
@@ -126,11 +127,10 @@ export const SummaryHeader: FunctionComponent = () => {
     }
   }
 
-  // TODO(FLOW-I18N): Placeholder format.
   const subtitleCounts = [];
-  if (numNavigation) subtitleCounts.push(`${numNavigation} navigation reports`);
-  if (numTimespan) subtitleCounts.push(`${numTimespan} timespan reports`);
-  if (numSnapshot) subtitleCounts.push(`${numSnapshot} snapshot reports`);
+  if (numNavigation) subtitleCounts.push(str_(strings.navigationReportCount, {numNavigation}));
+  if (numTimespan) subtitleCounts.push(str_(strings.timespanReportCount, {numTimespan}));
+  if (numSnapshot) subtitleCounts.push(str_(strings.snapshotReportCount, {numSnapshot}));
   const subtitle = subtitleCounts.join(' · ');
 
   return (
@@ -151,7 +151,7 @@ const SummarySectionHeader: FunctionComponent = ({children}) => {
 };
 
 export const Summary: FunctionComponent = () => {
-  const strings = useUIStrings();
+  const strings = useLocalizedStrings();
 
   return (
     <div className="Summary" data-testid="Summary">
